@@ -85,15 +85,31 @@ a wrong password forever, which can lock your account.
 
 ### Option 1: install the .deb package (recommended)
 
-1. Download `kerio-vpn_<version>_all.deb` from the
-   [latest release](https://github.com/liimitedinfinity/kerio-vpn/releases/latest).
-2. Install it:
+**One command** downloads and installs the latest release:
 
-   ```sh
-   sudo apt install ./kerio-vpn_*_all.deb
-   ```
+```sh
+wget -O /tmp/kerio-vpn.deb https://github.com/liimitedinfinity/kerio-vpn/releases/latest/download/kerio-vpn_latest_all.deb \
+  && sudo apt install /tmp/kerio-vpn.deb
+```
 
-3. Open **Kerio VPN** from your applications menu, or run `kerio-vpn`.
+Or download the file in your browser:
+
+| Package | Link |
+|---|---|
+| Latest release, Debian / Ubuntu / Mint (`all`) | [**kerio-vpn_latest_all.deb**](https://github.com/liimitedinfinity/kerio-vpn/releases/latest/download/kerio-vpn_latest_all.deb) |
+| Version 1.2.1 | [kerio-vpn_1.2.1_all.deb](https://github.com/liimitedinfinity/kerio-vpn/releases/download/v1.2.1/kerio-vpn_1.2.1_all.deb) |
+| Checksums | [SHA256SUMS](https://github.com/liimitedinfinity/kerio-vpn/releases/latest/download/SHA256SUMS) |
+| All versions | [Releases](https://github.com/liimitedinfinity/kerio-vpn/releases) |
+
+Then install it with `sudo apt install ./kerio-vpn_*_all.deb` and open **Kerio VPN** from
+your applications menu, or run `kerio-vpn`.
+
+To verify the download before installing:
+
+```sh
+wget https://github.com/liimitedinfinity/kerio-vpn/releases/latest/download/SHA256SUMS
+sha256sum --check --ignore-missing SHA256SUMS
+```
 
 `apt` pulls in all dependencies. Upgrading works the same way, and your profiles and saved
 passwords are kept.

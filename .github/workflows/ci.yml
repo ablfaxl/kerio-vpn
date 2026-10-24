@@ -54,15 +54,43 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: kerio-vpn-deb
           path: dist
-      - name: Checksums
-        run: cd dist && sha256sum *.deb > SHA256SUMS
+      - name: Stable download name and checksums
+        run: |
+          cd dist
+          cp kerio-vpn_*_all.deb kerio-vpn_latest_all.deb
+          sha256sum *.deb > SHA256SUMS
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" {on=1; next}
+            on && /^## \[/ {exit}
+            on && /^\[[0-9.]+\]:/ {exit}
+            on {print}
+          ' CHANGELOG.md > notes.md
+          cat >> notes.md <<'NOTES'
+
+          ### Install
+
+          ```sh
+          wget -O /tmp/kerio-vpn.deb https://github.com/${{ github.repository }}/releases/latest/download/kerio-vpn_latest_all.deb
+          sudo apt install /tmp/kerio-vpn.deb
+          ```
+
+          Requires a Debian-based distribution (Ubuntu, Debian, Linux Mint …) on amd64.
+          Kerio VPN installs the official Kerio Control VPN Client on first start if it is missing.
+          NOTES
+          sed -i 's/^          //' notes.md
+          cat notes.md
       - uses: softprops/action-gh-release@v2
         with:
+          name: Kerio VPN ${{ github.ref_name }}
+          body_path: notes.md
           files: |
             dist/*.deb
             dist/SHA256SUMS
-          generate_release_notes: true

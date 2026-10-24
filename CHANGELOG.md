@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project uses [Semantic Versioning](https://semver.org/).
 
+## [1.2.1] - 2026-10-24
+
+### Added
+- Release downloads: a stable `kerio-vpn_latest_all.deb` link that always points to the
+  newest version, and `SHA256SUMS` for verification.
+- One-command install instructions in the README.
+
 ## [1.2.0] - 2026-10-24
 
 ### Added
@@ -37,6 +44,7 @@ project uses [Semantic Versioning](https://semver.org/).
   status and logs, stop after failed logins, kill switch, systemd-resolved DNS, tray
   icon, notifications and CLI.
 
+[1.2.1]: https://github.com/liimitedinfinity/kerio-vpn/releases/tag/v1.2.1
 [1.2.0]: https://github.com/liimitedinfinity/kerio-vpn/releases/tag/v1.2.0
 [1.1.0]: https://github.com/liimitedinfinity/kerio-vpn/releases/tag/v1.1.0
 [1.0.0]: https://github.com/liimitedinfinity/kerio-vpn/releases/tag/v1.0.0
