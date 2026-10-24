@@ -87,7 +87,7 @@ jobs:
           NOTES
           sed -i 's/^          //' notes.md
           cat notes.md
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           name: Kerio VPN ${{ github.ref_name }}
           body_path: notes.md
