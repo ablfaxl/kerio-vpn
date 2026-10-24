@@ -1,0 +1,41 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please **remove server names, usernames and IP addresses**
+        from anything you paste. The built-in diagnostics report never contains passwords.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Kerio VPN version
+      placeholder: "1.2.0 (About page or `kerio-vpn --version`)"
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: Kerio Control VPN Client version
+      placeholder: "9.6.1 (dpkg-query -W kerio-control-vpnclient)"
+  - type: input
+    id: os
+    attributes:
+      label: Distribution and desktop
+      placeholder: "Ubuntu 24.04, GNOME 46, Wayland"
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics report
+      description: Menu → Diagnostics report… → Copy. Redact anything private.
+      render: text

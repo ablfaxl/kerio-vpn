@@ -1,0 +1,155 @@
+/* Uses theme colours where possible so light and dark themes both work. */
+
+.kvp-card {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid alpha(currentColor, 0.12);
+  background-color: alpha(currentColor, 0.03);
+}
+
+.kvp-card-title {
+  font-weight: bold;
+  font-size: 0.92em;
+  opacity: 0.75;
+}
+
+.kvp-state {
+  font-size: 1.7em;
+  font-weight: bold;
+}
+
+.kvp-state.ok      { color: #2eaf61; }
+.kvp-state.busy    { color: #3385e3; }
+.kvp-state.warning { color: #ed8f1a; }
+.kvp-state.error   { color: #db3838; }
+
+.kvp-detail {
+  opacity: 0.8;
+}
+
+.kvp-big-button {
+  min-height: 44px;
+  min-width: 190px;
+  font-size: 1.1em;
+  font-weight: bold;
+  border-radius: 22px;
+}
+
+.kvp-rate {
+  font-size: 1.25em;
+  font-weight: bold;
+  font-feature-settings: "tnum";
+}
+
+.kvp-rate.down { color: #2eaf61; }
+.kvp-rate.up   { color: #3385e3; }
+
+.kvp-log {
+  font-family: monospace;
+  font-size: 0.92em;
+}
+
+.kvp-profile-row {
+  padding: 8px 10px;
+}
+
+.kvp-profile-name {
+  font-weight: bold;
+}
+
+.kvp-badge {
+  font-size: 0.8em;
+  padding: 1px 8px;
+  border-radius: 9px;
+  background-color: alpha(#2eaf61, 0.18);
+  color: #2eaf61;
+}
+
+.kvp-check-ok   { color: #2eaf61; }
+.kvp-check-fail { color: #db3838; }
+
+.kvp-mono {
+  font-family: monospace;
+}
+
+/* ---- shell */
+.kvp-sidebar {
+  background-color: alpha(currentColor, 0.035);
+}
+
+.kvp-nav,
+.kvp-nav row {
+  background-color: transparent;
+}
+
+.kvp-nav row {
+  margin: 1px 8px;
+  border-radius: 8px;
+}
+
+.kvp-nav row:hover {
+  background-color: alpha(currentColor, 0.06);
+}
+
+.kvp-nav row:selected {
+  background-color: alpha(@theme_selected_bg_color, 0.9);
+  color: @theme_selected_fg_color;
+}
+
+.kvp-brand {
+  font-weight: 800;
+  font-size: 1.15em;
+}
+
+.kvp-small {
+  font-size: 0.85em;
+}
+
+.kvp-dot-ok      { color: #2eaf61; }
+.kvp-dot-busy    { color: #3385e3; }
+.kvp-dot-warning { color: #ed8f1a; }
+.kvp-dot-error   { color: #db3838; }
+.kvp-dot-idle    { color: #8c9199; }
+
+.kvp-page-title {
+  font-size: 1.5em;
+  font-weight: 800;
+}
+
+.kvp-about-name {
+  font-size: 2em;
+  font-weight: 800;
+}
+
+/* ---- dashboard */
+.kvp-hero {
+  padding: 18px 22px;
+  border-radius: 14px;
+  border: 1px solid alpha(currentColor, 0.12);
+  background-color: alpha(currentColor, 0.04);
+}
+
+.kvp-tile {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid alpha(currentColor, 0.12);
+  background-color: alpha(currentColor, 0.03);
+}
+
+.kvp-tile-caption {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.kvp-tile-value {
+  font-size: 1.35em;
+  font-weight: bold;
+  font-feature-settings: "tnum";
+}
+
+.kvp-tile-value.down { color: #2eaf61; }
+.kvp-tile-value.up   { color: #3385e3; }
+
+flowboxchild {
+  padding: 0;
+}

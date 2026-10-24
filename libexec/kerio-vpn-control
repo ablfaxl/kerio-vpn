@@ -1,0 +1,10 @@
+#!/usr/bin/python3 -I
+# Privileged entry point, started through pkexec. See kerio_vpn/helper.py.
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+from kerio_vpn import helper  # noqa: E402
+
+sys.exit(helper.main("control"))

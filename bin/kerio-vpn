@@ -1,0 +1,13 @@
+#!/usr/bin/python3
+import os
+import sys
+
+_here = os.path.dirname(os.path.realpath(__file__))
+for _base in (os.path.dirname(_here), "/usr/lib/kerio-vpn"):
+    if os.path.isdir(os.path.join(_base, "kerio_vpn")):
+        sys.path.insert(0, _base)
+        break
+
+from kerio_vpn.__main__ import main  # noqa: E402
+
+sys.exit(main())

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.keriovpn.KerioVpn</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Kerio VPN</name>
+  <summary>Desktop client for Kerio Control VPN on Linux</summary>
+  <description>
+    <p>
+      Kerio VPN is an open-source graphical client for the official Kerio Control VPN
+      Client for Linux, which on its own only offers a command-line setup wizard.
+    </p>
+    <ul>
+      <li>One-click connect and disconnect with multiple connection profiles</li>
+      <li>Live status, traffic chart, routes, DNS and latency</li>
+      <li>Split tunneling: bypass the VPN or force destinations through it</li>
+      <li>Kill switch, DNS leak protection and server certificate pinning</li>
+      <li>Live logs, diagnostics report, tray icon and a scriptable CLI</li>
+    </ul>
+    <p>Kerio VPN is not affiliated with Kerio Technologies or GFI Software.</p>
+  </description>
+  <launchable type="desktop-id">kerio-vpn.desktop</launchable>
+  <url type="homepage">https://github.com/liimitedinfinity/kerio-vpn</url>
+  <url type="bugtracker">https://github.com/liimitedinfinity/kerio-vpn/issues</url>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Dashboard</caption>
+      <image>https://raw.githubusercontent.com/liimitedinfinity/kerio-vpn/main/docs/screenshots/dashboard-dark.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Split tunneling</caption>
+      <image>https://raw.githubusercontent.com/liimitedinfinity/kerio-vpn/main/docs/screenshots/split-tunneling.png</image>
+    </screenshot>
+  </screenshots>
+  <categories>
+    <category>Network</category>
+    <category>Security</category>
+  </categories>
+  <keywords>
+    <keyword>VPN</keyword>
+    <keyword>Kerio</keyword>
+    <keyword>Kerio Control</keyword>
+  </keywords>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="1.2.0" date="2026-10-24"/>
+    <release version="1.1.0" date="2026-10-24"/>
+    <release version="1.0.0" date="2026-10-24"/>
+  </releases>
+</component>

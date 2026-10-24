@@ -1,0 +1,21 @@
+[Desktop Entry]
+Type=Application
+Name=Kerio VPN
+GenericName=VPN Client
+Comment=Desktop client for Kerio Control VPN: connections, split tunneling and logs
+Exec=kerio-vpn
+Icon=kerio-vpn
+Terminal=false
+Categories=Network;Security;GTK;
+Keywords=vpn;kerio;kerio control;kvpncsvc;tunnel;network;split;
+StartupNotify=true
+StartupWMClass=kerio-vpn
+Actions=connect;disconnect;
+
+[Desktop Action connect]
+Name=Connect
+Exec=kerio-vpn --connect-default
+
+[Desktop Action disconnect]
+Name=Disconnect
+Exec=kerio-vpn --disconnect

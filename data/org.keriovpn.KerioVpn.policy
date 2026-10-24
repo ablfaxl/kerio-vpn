@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>Kerio VPN</vendor>
+
+  <!-- Connect / disconnect the already configured tunnel, DNS and kill switch.
+       Like NetworkManager, the user at the local console may do this. -->
+  <action id="org.keriovpn.KerioVpn.control">
+    <description>Control the Kerio VPN connection</description>
+    <message>Authentication is required to control the Kerio VPN connection</message>
+    <icon_name>kerio-vpn</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>yes</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/kerio-vpn/libexec/kerio-vpn-control</annotate>
+  </action>
+
+  <!-- Writing /etc/kerio-kvc.conf changes system configuration. -->
+  <action id="org.keriovpn.KerioVpn.configure">
+    <description>Configure the Kerio VPN client</description>
+    <message>Authentication is required to change the Kerio VPN configuration</message>
+    <icon_name>kerio-vpn</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/kerio-vpn/libexec/kerio-vpn-configure</annotate>
+  </action>
+</policyconfig>
