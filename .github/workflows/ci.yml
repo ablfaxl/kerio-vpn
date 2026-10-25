@@ -39,12 +39,23 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends python3-gi gir1.2-gtk-3.0
-      - name: Build package
+      - name: Build .deb
         run: make deb
+      - name: Build AppImage
+        run: |
+          sudo apt-get install -y --no-install-recommends desktop-file-utils
+          curl -fsSL -o appimagetool.AppImage \
+            https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool.AppImage
+          printf '#!/bin/sh\nexec "%s/appimagetool.AppImage" --appimage-extract-and-run "$@"\n' "$PWD" > appimagetool
+          chmod +x appimagetool
+          APPIMAGETOOL="$PWD/appimagetool" packaging/build-appimage.sh
       - uses: actions/upload-artifact@v4
         with:
           name: kerio-vpn-deb
-          path: dist/*.deb
+          path: |
+            dist/*.deb
+            dist/*.AppImage
 
   release:
     name: Publish release
@@ -63,7 +74,8 @@ jobs:
         run: |
           cd dist
           cp kerio-vpn_*_all.deb kerio-vpn_latest_all.deb
-          sha256sum *.deb > SHA256SUMS
+          cp kerio-vpn-*-x86_64.AppImage kerio-vpn-latest-x86_64.AppImage
+          sha256sum *.deb *.AppImage > SHA256SUMS
       - name: Release notes from CHANGELOG.md
         run: |
           version="${GITHUB_REF_NAME#v}"
@@ -82,6 +94,9 @@ jobs:
           sudo apt install /tmp/kerio-vpn.deb
           ```
 
+          An AppImage is attached as well (it uses the system's python3 and GTK 3; privileged
+          actions always ask for the administrator password, so the .deb is recommended).
+
           Requires a Debian-based distribution (Ubuntu, Debian, Linux Mint …) on amd64.
           Kerio VPN installs the official Kerio Control VPN Client on first start if it is missing.
           NOTES
@@ -93,4 +108,5 @@ jobs:
           body_path: notes.md
           files: |
             dist/*.deb
+            dist/*.AppImage
             dist/SHA256SUMS

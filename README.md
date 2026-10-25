@@ -21,7 +21,7 @@ No more `dpkg-reconfigure` and editing `/etc/kerio-kvc.conf` by hand.
 [CLI](#command-line-interface) ·
 [FAQ](#faq--troubleshooting)
 
-<img src="docs/screenshots/dashboard-dark.png" alt="Kerio VPN dashboard on Linux: connected status, traffic chart and connection details" width="860">
+<img src="docs/screenshots/demo.gif" alt="Kerio VPN demo: connecting to a Kerio Control VPN server on Linux, live traffic, split tunneling and connection profiles" width="860">
 
 </div>
 
@@ -66,6 +66,8 @@ a wrong password forever, which can lock your account.
 
 ## Screenshots
 
+![Kerio VPN dark theme dashboard](docs/screenshots/dashboard-dark.png)
+
 | Dashboard | Connections |
 |---|---|
 | ![Kerio VPN Linux dashboard](docs/screenshots/dashboard.png) | ![Managing Kerio VPN connection profiles](docs/screenshots/connections.png) |
@@ -97,12 +99,19 @@ Or download the file in your browser:
 | Package | Link |
 |---|---|
 | Latest release, Debian / Ubuntu / Mint (`all`) | [**kerio-vpn_latest_all.deb**](https://github.com/liimitedinfinity/kerio-vpn/releases/latest/download/kerio-vpn_latest_all.deb) |
-| Version 1.2.1 | [kerio-vpn_1.2.1_all.deb](https://github.com/liimitedinfinity/kerio-vpn/releases/download/v1.2.1/kerio-vpn_1.2.1_all.deb) |
+| Version 1.3.0 | [kerio-vpn_1.3.0_all.deb](https://github.com/liimitedinfinity/kerio-vpn/releases/download/v1.3.0/kerio-vpn_1.3.0_all.deb) |
+| AppImage (portable, no install) | [kerio-vpn-latest-x86_64.AppImage](https://github.com/liimitedinfinity/kerio-vpn/releases/latest/download/kerio-vpn-latest-x86_64.AppImage) |
 | Checksums | [SHA256SUMS](https://github.com/liimitedinfinity/kerio-vpn/releases/latest/download/SHA256SUMS) |
 | All versions | [Releases](https://github.com/liimitedinfinity/kerio-vpn/releases) |
 
 Then install it with `sudo apt install ./kerio-vpn_*_all.deb` and open **Kerio VPN** from
 your applications menu, or run `kerio-vpn`.
+
+The AppImage runs without installing (`chmod +x kerio-vpn-latest-x86_64.AppImage` and
+start it). It uses your system's Python and GTK 3 (`sudo apt install python3-gi
+python3-gi-cairo gir1.2-gtk-3.0`). Because an AppImage cannot install a polkit policy,
+every privileged action asks for the administrator password, so the `.deb` is the
+recommended way to install.
 
 To verify the download before installing:
 

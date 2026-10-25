@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the
 project uses [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-10-25
+
+### Added
+- AppImage on every release (`kerio-vpn-latest-x86_64.AppImage`), next to the `.deb`.
+- Animated demo in the README and a social preview image (`docs/social-preview.png`).
+- `tools/screenshots.py --gif` records the demo from demo data only, and
+  `tools/social_preview.py` renders the preview image.
+
+### Changed
+- The screenshot tool now replaces every host query with fixed demo values, so no
+  information about the machine that renders the images can appear in them.
+
 ## [1.2.1] - 2026-10-24
 
 ### Added
@@ -44,6 +56,7 @@ project uses [Semantic Versioning](https://semver.org/).
   status and logs, stop after failed logins, kill switch, systemd-resolved DNS, tray
   icon, notifications and CLI.
 
+[1.3.0]: https://github.com/liimitedinfinity/kerio-vpn/releases/tag/v1.3.0
 [1.2.1]: https://github.com/liimitedinfinity/kerio-vpn/releases/tag/v1.2.1
 [1.2.0]: https://github.com/liimitedinfinity/kerio-vpn/releases/tag/v1.2.0
 [1.1.0]: https://github.com/liimitedinfinity/kerio-vpn/releases/tag/v1.1.0

@@ -8,6 +8,7 @@ privileged call is blocked.
 Usage:
     xvfb-run -a -s "-screen 0 1280x900x24" python3 tools/screenshots.py docs/screenshots
     GTK_THEME=Adwaita:dark ... python3 tools/screenshots.py docs/screenshots --dark
+    GTK_THEME=Adwaita:dark ... python3 tools/screenshots.py docs/screenshots --gif   (needs Pillow)
 """
 
 import json
@@ -22,6 +23,7 @@ sys.path.insert(0, ROOT)
 
 OUT = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else "docs/screenshots")
 DARK = "--dark" in sys.argv
+GIF = "--gif" in sys.argv
 os.makedirs(OUT, exist_ok=True)
 
 # ---- isolated demo environment -------------------------------------------
@@ -80,8 +82,18 @@ privileged.configure = _no_privileged
 monitor.Monitor.start = lambda self: None          # no polling of the real service
 controller.Controller._after_connected = lambda self, snap: None
 controller.Controller._watch_sleep = lambda self: None
-from kerio_vpn.logparse import (CONNECTED, NOT_INSTALLED, STOPPED, Route,  # noqa: E402
-                                TunnelInfo)
+# Every host query returns fixed demo values, so nothing about this machine is shown.
+kvc.RESOLV_BACKUP = os.path.join(TMP, "no-such-file")
+system.nameservers = lambda: []
+system.resolved_active = lambda: True
+system.service_state = lambda: system.ServiceState(installed=True, loaded=True)
+system.check_environment = lambda: {k: (True, v) for k, v in (
+    ("daemon", "9.6.1.9306.0.patch1-1"), ("service", "kerio-kvc.service"),
+    ("tun", "/dev/net/tun"), ("pkexec", "/usr/bin/pkexec"),
+    ("logs", "/var/log/kerio-kvc/debug.log"), ("nft", "nftables"),
+    ("resolved", "systemd-resolved"))}
+from kerio_vpn.logparse import (CONNECTED, CONNECTING, NOT_INSTALLED, STOPPED,  # noqa: E402
+                                Route, TunnelInfo)
 from kerio_vpn.monitor import Snapshot  # noqa: E402
 from kerio_vpn.ui import app as appmod  # noqa: E402
 from kerio_vpn.ui.dialogs import ProfileDialog  # noqa: E402
@@ -90,7 +102,7 @@ controller.read_applied = lambda: {"tag": None}
 system.daemon_version = lambda: "9.6.1.9306.0.patch1-1"
 
 app = appmod.Application()
-state = {"mode": CONNECTED, "n": 0}
+state = {"mode": CONNECTED, "n": 0, "since": None}
 random.seed(7)
 
 
@@ -100,8 +112,11 @@ def snapshot():
     n = state["n"]
     installed = mode != NOT_INSTALLED
     svc = system.ServiceState(installed=installed, loaded=installed,
-                              active="active" if mode == CONNECTED else "inactive",
+                              active="active" if mode in (CONNECTED, CONNECTING) else "inactive",
                               enabled="disabled")
+    if mode == CONNECTING:
+        return Snapshot(state=mode, service=svc, info=TunnelInfo(
+            phase=CONNECTING, username="jane.doe", server="vpn.example.com"))
     if mode != CONNECTED:
         return Snapshot(state=mode, service=svc)
     info = TunnelInfo(phase=CONNECTED, username="jane.doe", server="vpn.example.com",
@@ -110,7 +125,7 @@ def snapshot():
                       routes=[Route(MASK, "255.255.255.0", MASK),
                               Route(MASK, "255.240.0.0", MASK),
                               Route(MASK, "255.255.255.0", MASK)],
-                      connected_since=time.time() - 2 * 3600 - 17 * 60 - 42)
+                      connected_since=state["since"] or time.time() - 2 * 3600 - 17 * 60 - 42)
     burst = 1.0 + 3.0 * max(0.0, 1 - abs(n - 70) / 25.0)
     rx = random.uniform(180e3, 520e3) * burst
     tx = random.uniform(25e3, 90e3) * burst
@@ -143,8 +158,8 @@ def run_shots():
         shots += [("connections", CONNECTED, "connections", 2),
                   ("routing", CONNECTED, "split-tunneling", 2),
                   ("settings", CONNECTED, "settings", 2),
-                  ("dashboard", NOT_INSTALLED, "install", 2),
-                  ("dashboard", STOPPED, "disconnected", 2)]
+                  ("dashboard", STOPPED, "disconnected", 2),
+                  ("dashboard", NOT_INSTALLED, "install", 2)]
     steps = []
     for page, mode, name, ticks in shots:
         steps.append(("page", page, mode))
@@ -182,5 +197,55 @@ def run_shots():
     return False
 
 
-GLib.timeout_add(2500, run_shots)
+def run_gif():
+    """Record a short demo: disconnected → connecting → connected → split tunneling."""
+    from PIL import Image
+
+    win = app.window
+    win.resize(1180, 780)
+    frames, durations = [], []
+
+    def grab(duration):
+        alloc = win.get_allocation()
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, alloc.width, alloc.height)
+        win.draw(cairo.Context(surface))
+        img = Image.frombuffer("RGBA", (alloc.width, alloc.height), bytes(surface.get_data()),
+                               "raw", "BGRA", surface.get_stride(), 1).convert("RGB")
+        img = img.resize((960, int(alloc.height * 960 / alloc.width)), Image.LANCZOS)
+        frames.append(img)
+        durations.append(duration)
+
+    # (page, mode, number of frames, ms per frame)
+    script = [("dashboard", STOPPED, 1, 1600), ("dashboard", CONNECTING, 10, 120),
+              ("dashboard", CONNECTED, 36, 110), ("dashboard", CONNECTED, 1, 1400),
+              ("routing", CONNECTED, 1, 2200), ("connections", CONNECTED, 1, 1800)]
+    steps = []
+    for page, mode, count, ms in script:
+        steps += [(page, mode, ms)] * count
+
+    def step():
+        if not steps:
+            path = os.path.join(OUT, "demo.gif")
+            palette = frames[len(frames) // 2].quantize(colors=255, method=Image.MEDIANCUT)
+            frames_p = [f.quantize(palette=palette, dither=Image.NONE) for f in frames]
+            frames_p[0].save(path, save_all=True, append_images=frames_p[1:],
+                             duration=durations, loop=0, optimize=True, disposal=1)
+            print("wrote", path, "%d frames" % len(frames))
+            app._quit()
+            return False
+        page, mode, ms = steps.pop(0)
+        if mode == CONNECTED and state["mode"] != CONNECTED:
+            state["since"] = time.time()
+            win.dashboard.chart.clear()
+        state["mode"] = mode
+        win.show_page(page)
+        emit()
+        GLib.timeout_add(ms, lambda: (grab(ms), GLib.idle_add(step), False)[-1])
+        return False
+
+    GLib.timeout_add(300, step)
+    return False
+
+
+GLib.timeout_add(2500, run_gif if GIF else run_shots)
 app.run([sys.argv[0]])

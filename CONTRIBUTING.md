@@ -36,6 +36,9 @@ make test
   xvfb-run -a -s "-screen 0 1280x900x24" python3 tools/screenshots.py docs/screenshots
   GTK_THEME=Adwaita:dark xvfb-run -a -s "-screen 0 1280x900x24" \
       python3 tools/screenshots.py docs/screenshots --dark
+  GTK_THEME=Adwaita:dark xvfb-run -a -s "-screen 0 1280x900x24" \
+      python3 tools/screenshots.py docs/screenshots --gif     # README demo (needs Pillow)
+  python3 tools/social_preview.py                              # docs/social-preview.png
   ```
 
 - Add an entry to `CHANGELOG.md`.

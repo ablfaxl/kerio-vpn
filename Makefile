@@ -4,7 +4,7 @@ LIBDIR   = $(PREFIX)/lib/kerio-vpn
 SHAREDIR = $(PREFIX)/share
 VERSION  = $(shell python3 -c "import kerio_vpn; print(kerio_vpn.VERSION)")
 
-.PHONY: all test lint install uninstall deb clean
+.PHONY: all test lint install uninstall deb appimage clean
 
 all: test
 
@@ -39,6 +39,9 @@ uninstall:
 
 deb: test
 	packaging/build-deb.sh
+
+appimage: test
+	packaging/build-appimage.sh
 
 clean:
 	rm -rf build dist
