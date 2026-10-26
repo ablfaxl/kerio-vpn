@@ -7,19 +7,26 @@ dependencies and must treat every input as untrusted.
 from __future__ import annotations
 
 import ipaddress
+import os
+import sys
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Optional
 from xml.sax.saxutils import escape
 
-CONFIG_PATH = "/etc/kerio-kvc.conf"
-LOG_DIR = "/var/log/kerio-kvc"
+IS_MACOS = sys.platform == "darwin"
+
+CONFIG_PATH = (os.path.expanduser("~/.kerio/vpnclient/user.cfg") if IS_MACOS
+               else "/etc/kerio-kvc.conf")
+LOG_DIR = (os.path.expanduser("~/.kerio/vpnclient/logs") if IS_MACOS
+           else "/var/log/kerio-kvc")
 DEBUG_LOG = LOG_DIR + "/debug.log"
 ERROR_LOG = LOG_DIR + "/error.log"
-DAEMON = "/usr/sbin/kvpncsvc"
-SERVICE = "kerio-kvc.service"
-INIT_SCRIPT = "/etc/init.d/kerio-kvc"
+DAEMON = ("/usr/local/kerio/vpnclient/kvpncsvc" if IS_MACOS else "/usr/sbin/kvpncsvc")
+SERVICE = "com.kerio.kvpncsvc" if IS_MACOS else "kerio-kvc.service"
+INIT_SCRIPT = ("/Library/LaunchDaemons/com.kerio.kvpncsvc.plist" if IS_MACOS
+               else "/etc/init.d/kerio-kvc")
 DEB_PACKAGE = "kerio-control-vpnclient"
 DEFAULT_PORT = 4090
 RESOLV_CONF = "/etc/resolv.conf"

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
 from typing import Optional
 
 try:
@@ -24,10 +26,15 @@ def _schema(name: str = SCHEMA_NAME):
 
 
 def available() -> bool:
-    return Secret is not None
+    return sys.platform == "darwin" or Secret is not None
 
 
 def store(profile_id: str, label: str, password: str) -> bool:
+    if sys.platform == "darwin":
+        p = subprocess.run(["security", "add-generic-password", "-U", "-a", profile_id,
+                            "-s", SCHEMA_NAME, "-l", "Kerio VPN: %s" % label, "-w", password],
+                           capture_output=True, text=True)
+        return p.returncode == 0
     if Secret is None:
         return False
     try:
@@ -39,6 +46,10 @@ def store(profile_id: str, label: str, password: str) -> bool:
 
 
 def lookup(profile_id: str) -> Optional[str]:
+    if sys.platform == "darwin":
+        p = subprocess.run(["security", "find-generic-password", "-a", profile_id,
+                            "-s", SCHEMA_NAME, "-w"], capture_output=True, text=True)
+        return p.stdout.rstrip("\n") if p.returncode == 0 else None
     if Secret is None:
         return None
     try:
@@ -52,6 +63,10 @@ def lookup(profile_id: str) -> Optional[str]:
 
 
 def clear(profile_id: str) -> None:
+    if sys.platform == "darwin":
+        subprocess.run(["security", "delete-generic-password", "-a", profile_id,
+                        "-s", SCHEMA_NAME], capture_output=True)
+        return
     if Secret is None:
         return
     for name in (SCHEMA_NAME, LEGACY_SCHEMA_NAME):

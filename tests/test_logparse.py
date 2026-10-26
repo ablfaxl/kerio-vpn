@@ -83,13 +83,23 @@ class TrackerTest(unittest.TestCase):
         e = lp.parse_error_line("[01/Jan/2026 10:50:41] libVPN: Authentication failed(161)")
         self.assertEqual((e.code, e.text), (161, "Authentication failed"))
 
+    def test_macos_rpc_status(self):
+        info = feed(
+            '[01/Jan/2026 10:55:46] {vpnRpc} TinyDB RPC Client received notification packet '
+            '(select connect("vpn.example.com", "alice", "********", 0)).\n'
+            '[01/Jan/2026 10:55:47] {vpnRpc} TinyDB RPC Client received status packet '
+            '(connecting, err: 0).\n'
+            '[01/Jan/2026 10:55:48] {vpnRpc} TinyDB RPC Client received status packet '
+            '(connected, err: 0).\n')
+        self.assertEqual(info.phase, lp.CONNECTED)
+        self.assertEqual(info.server, "vpn.example.com")
+        self.assertEqual(info.username, "alice")
+        self.assertIsNotNone(info.connected_since)
+
 
 class LogTailTest(unittest.TestCase):
     def test_follow_truncate_rotate(self):
-        try:
-            from kerio_vpn.monitor import LogTail
-        except ImportError:
-            self.skipTest("gi not available")
+        from kerio_vpn.logtail import LogTail
         with tempfile.TemporaryDirectory() as d:
             path = os.path.join(d, "debug.log")
             with open(path, "w") as f:

@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 build/
+.build/
 dist/
 *.deb
 *.part

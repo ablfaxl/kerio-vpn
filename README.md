@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="data/icons/kerio-vpn.svg" width="112" alt="Kerio VPN logo">
+<img src="data/macos/app-icon-1024.png" width="128" alt="Kerio VPN app icon">
 
-# Kerio VPN — Kerio Control VPN Client GUI for Linux
+# Kerio VPN — Kerio Control VPN Client GUI for Linux and macOS
 
-**The missing graphical interface for the Kerio Control VPN Client on Ubuntu, Debian and Linux Mint.**
+**A modern companion for the official Kerio Control VPN Client on Linux and macOS.**
 Connect in one click, manage several VPN profiles, split-tunnel traffic, and watch live status and logs.
 No more `dpkg-reconfigure` and editing `/etc/kerio-kvc.conf` by hand.
 
@@ -12,7 +12,7 @@ No more `dpkg-reconfigure` and editing `/etc/kerio-kvc.conf` by hand.
 [![Release](https://img.shields.io/github/v/release/liimitedinfinity/kerio-vpn?sort=semver)](https://github.com/liimitedinfinity/kerio-vpn/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/liimitedinfinity/kerio-vpn/total)](https://github.com/liimitedinfinity/kerio-vpn/releases)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-![Platform](https://img.shields.io/badge/platform-Ubuntu%20%7C%20Debian%20%7C%20Mint-orange)
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Ubuntu%20%7C%20Debian%20%7C%20Mint-blue)
 
 [**Download**](https://github.com/liimitedinfinity/kerio-vpn/releases/latest) ·
 [Features](#features) ·
@@ -37,6 +37,7 @@ a wrong password forever, which can lock your account.
 **Kerio VPN** is a free, open-source desktop app and CLI built on top of the official client:
 
 - ✅ Uses the **official Kerio daemon** (`kvpncsvc`). It controls the client and does not replace it.
+- ✅ Includes a **native SwiftUI macOS app** with its own isolated multi-profile workspace.
 - ✅ Looks and works like a modern VPN app: **one-click connect**, tray icon, notifications.
 - ✅ **Installs the Kerio client for you** if it is missing.
 - ✅ Adds features the official client lacks: **split tunneling**, a **kill switch**,
@@ -77,6 +78,47 @@ a wrong password forever, which can lock your account.
 | ![Install the Kerio Control VPN Client automatically](docs/screenshots/install.png) | ![Adding a Kerio VPN connection with certificate fingerprint detection](docs/screenshots/connection-editor.png) |
 
 ## Installation
+
+### macOS
+
+The macOS edition is a native SwiftUI app. It shows the launchd/tunnel state, readable recent
+logs, and maintains any number of connections independently from Kerio's existing preference
+pane. Its profile store lives in `~/Library/Application Support/KerioVPNMac`; the existing
+`~/.kerio/vpnclient` directory is never modified.
+
+When you open a connection, the signed Kerio status client is launched with an isolated home
+directory containing only this app's profiles. Password fields are deliberately left empty so
+Kerio asks for them directly; this project never reads or exports saved passwords. Use
+**Import existing** to copy only connection name, server, username, and persistence metadata
+from the existing Kerio configuration.
+
+macOS features:
+
+- Native SwiftUI split-view interface and Dock icon
+- Add and remove multiple independent Kerio connections
+- One-click import of non-secret metadata from the existing Kerio client
+- Isolated Kerio runtime under `Application Support/KerioVPNMac/KerioHome`
+- Live daemon status and recent activity log
+- No changes to the user's original Kerio profiles
+
+Requirements: macOS 13 or newer and the official Kerio Control VPN Client. Build the app with:
+
+```sh
+make macos
+open "dist/Kerio VPN.app"
+```
+
+The build targets the current Mac architecture and produces an ad-hoc signed local app bundle.
+The official client itself must be installed from the
+[Kerio/GFI VPN download page](https://www.gfi.com/products-and-solutions/network-security-solutions/keriocontrol/resources/vpn).
+
+The CLI also understands the native macOS layout:
+
+```sh
+python3 -m kerio_vpn status
+python3 -m kerio_vpn profiles
+python3 -m kerio_vpn logs -n 50
+```
 
 ### Requirements
 

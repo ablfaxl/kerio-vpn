@@ -10,8 +10,8 @@ from kerio_vpn import kvc  # noqa: E402
 
 def shell_xor(password: str) -> str:
     """The exact loop from kerio-control-vpnclient's postinst."""
-    script = ('XOR=""; for i in `echo -n "$1" | od -t d1 -A n`; do '
-              'XOR=$(printf "%s%02x" "$XOR" $((i ^ 85))); done; echo -n "$XOR"')
+    script = ('XOR=""; for i in `printf %s "$1" | od -t d1 -A n`; do '
+              'XOR=$(printf "%s%02x" "$XOR" $((i ^ 85))); done; printf %s "$XOR"')
     return subprocess.check_output(["sh", "-c", script, "sh", password]).decode()
 
 

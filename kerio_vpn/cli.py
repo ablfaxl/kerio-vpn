@@ -37,8 +37,14 @@ def _session_info():
 def cmd_status(args) -> int:
     st = system.service_state()
     info = _session_info()
-    from .monitor import Monitor
-    state = Monitor._derive_state(st, info)
+    if not st.installed:
+        state = logparse.NOT_INSTALLED
+    elif not st.running:
+        state = logparse.STOPPED
+    elif info.phase == logparse.STOPPED:
+        state = logparse.CONNECTING
+    else:
+        state = info.phase
     iface = system.guess_vpn_interface(info.if_index) if st.running else None
     data = {
         "state": state, "service": st.active, "enabled": st.enabled,
@@ -88,6 +94,15 @@ def _find_profile(store: ProfileStore, settings: Settings, name):
 
 
 def cmd_connect(args) -> int:
+    if sys.platform == "darwin":
+        from .macos import open_client
+        try:
+            open_client()
+        except RuntimeError as e:
+            print("error: %s" % e, file=sys.stderr)
+            return 4
+        print("Opened Kerio Control VPN Client. Choose the connection and click Connect.")
+        return 0
     from .controller import NeedPassword, activate_profile
     store, settings = ProfileStore(), Settings.load()
     profile = _find_profile(store, settings, args.profile)
@@ -129,6 +144,15 @@ def cmd_connect(args) -> int:
 
 def cmd_simple(action: str):
     def run(_args) -> int:
+        if sys.platform == "darwin":
+            from .macos import open_client
+            try:
+                open_client()
+            except RuntimeError as e:
+                print("error: %s" % e, file=sys.stderr)
+                return 4
+            print("Opened Kerio Control VPN Client for %s." % action)
+            return 0
         try:
             privileged.control(action)
             if action == "stop":
@@ -141,6 +165,16 @@ def cmd_simple(action: str):
 
 
 def cmd_profiles(_args) -> int:
+    if sys.platform == "darwin":
+        from .macos import read_connections
+        connections = read_connections()
+        if not connections:
+            print("No native Kerio connections.")
+        for connection in connections:
+            suffix = " (persistent)" if connection.persistent else ""
+            print("  %-24s %s@%s%s" % (connection.name, connection.username,
+                                       connection.server, suffix))
+        return 0
     store, settings = ProfileStore(), Settings.load()
     if not store.profiles:
         print("No profiles.")
@@ -155,7 +189,7 @@ def cmd_logs(args) -> int:
     if not os.access(path, os.R_OK):
         print("cannot read %s" % path, file=sys.stderr)
         return 1
-    from .monitor import LogTail
+    from .logtail import LogTail
     tail = LogTail(path)
     lines = tail.initial(2 * 1024 * 1024)
 
@@ -210,6 +244,10 @@ def cmd_add(args) -> int:
 
 
 def cmd_install_client(args) -> int:
+    if sys.platform == "darwin":
+        print("Install the official macOS .dmg from Kerio/GFI; .deb packages are Linux-only.",
+              file=sys.stderr)
+        return 2
     from . import installer
     reason = installer.supported()
     if reason:

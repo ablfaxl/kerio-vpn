@@ -9,6 +9,7 @@ import shutil
 import tempfile
 import time
 import uuid
+import sys
 from dataclasses import asdict, dataclass, field, fields
 from typing import Dict, List, Optional
 
@@ -19,7 +20,10 @@ LEGACY_DIR_NAME = "kerio-vpn-panel"   # used by releases before 1.1
 
 
 def config_dir() -> str:
-    base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    if sys.platform == "darwin":
+        base = os.path.expanduser("~/Library/Application Support")
+    else:
+        base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
     path = os.path.join(base, PACKAGE)
     legacy = os.path.join(base, LEGACY_DIR_NAME)
     if not os.path.exists(path) and os.path.isdir(legacy):

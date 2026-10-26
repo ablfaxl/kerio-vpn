@@ -44,6 +44,8 @@ P_DRIVER = re.compile(r"VPN driver opened, version = \S+, ifIndex = (\d+)")
 P_LIBVPN = re.compile(r"Callback StatusChanged called from libVpn\(([^)]*)\)")
 P_ENGINE = re.compile(r"(?:Saving and sending|Sending) status to Engine \((\w+)\)")
 P_ERRLOG = re.compile(r"libVPN: (.*?)\((\d+)\)\s*$")
+P_MAC_CONNECT = re.compile(r'TinyDB RPC Client received notification packet \(select connect\("([^"]+)", "([^"]+)"')
+P_MAC_STATUS = re.compile(r"TinyDB RPC Client received status packet \(([^,]+), err: (\d+)\)")
 
 # Tunnel states exposed to the UI.
 NOT_INSTALLED = "not-installed"
@@ -160,6 +162,32 @@ class StateTracker:
         if line.noisy:
             return False
         info = self.info
+
+        m = P_MAC_CONNECT.search(msg)
+        if m:
+            info.server, info.username = m.group(1), m.group(2)
+            info.attempt += 1
+            info.phase = CONNECTING
+            return True
+
+        m = P_MAC_STATUS.search(msg)
+        if m:
+            status, error = m.group(1).strip().lower(), int(m.group(2))
+            if status == "connected":
+                info.phase = CONNECTED
+                info.connected_since = line.ts or time.time()
+                info.consecutive_errors = 0
+                info.last_error_code = None
+            elif status == "disconnected":
+                info.phase = STOPPED
+                info.connected_since = None
+            elif status in ("connecting", "checking certificate"):
+                info.phase = CONNECTING
+            if error:
+                info.last_error_code = error
+                info.last_error_ts = line.ts
+                info.consecutive_errors += 1
+            return True
 
         m = P_STARTED.search(msg)
         if m:

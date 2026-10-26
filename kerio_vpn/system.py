@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
@@ -49,6 +50,10 @@ def daemon_installed() -> bool:
 
 
 def daemon_version() -> str:
+    if sys.platform == "darwin":
+        info = "/usr/local/kerio/vpnclient/KVpnClientStatus.app/Contents/Info.plist"
+        rc, out, _ = run(["/usr/libexec/PlistBuddy", "-c", "Print :CFBundleShortVersionString", info])
+        return out.strip() if rc == 0 else ""
     rc, out, _ = run(["dpkg-query", "-W", "-f=${Version}", kvc.DEB_PACKAGE])
     return out.strip() if rc == 0 else ""
 
@@ -63,6 +68,17 @@ def _pgrep_daemon() -> int:
 def service_state() -> ServiceState:
     st = ServiceState(installed=daemon_installed())
     if not st.installed:
+        return st
+    if sys.platform == "darwin":
+        rc, out, err = run(["launchctl", "print", "system/" + kvc.SERVICE], timeout=3)
+        st.loaded = rc == 0
+        text = out + "\n" + err
+        pid_match = re.search(r"\bpid\s*=\s*(\d+)", text)
+        state_match = re.search(r"\bstate\s*=\s*(\w+)", text)
+        st.main_pid = int(pid_match.group(1)) if pid_match else _pgrep_daemon()
+        state = state_match.group(1).lower() if state_match else ""
+        st.active = "active" if st.main_pid or state == "running" else "inactive"
+        st.enabled = "enabled" if st.loaded else "disabled"
         return st
     if not has_systemd():
         pid = _pgrep_daemon()
@@ -94,6 +110,14 @@ def service_state() -> ServiceState:
 def interface_by_index(index: Optional[int]) -> Optional[str]:
     if index is None:
         return None
+    if sys.platform == "darwin":
+        rc, out, _ = run(["ifconfig", "-l"], timeout=2)
+        for name in out.split():
+            rc, detail, _ = run(["ifconfig", name], timeout=2)
+            m = re.search(r"\bindex\s+(\d+)\b", detail)
+            if rc == 0 and m and int(m.group(1)) == index:
+                return name
+        return None
     try:
         for name in os.listdir(SYS_NET):
             try:
@@ -111,6 +135,10 @@ def guess_vpn_interface(index: Optional[int]) -> Optional[str]:
     name = interface_by_index(index)
     if name:
         return name
+    if sys.platform == "darwin":
+        rc, out, _ = run(["ifconfig", "-l"], timeout=2)
+        candidates = [n for n in out.split() if n.startswith(("kvnet", "utun"))]
+        return candidates[-1] if candidates else None
     try:
         for name in sorted(os.listdir(SYS_NET)):
             if name.startswith("kvnet"):
@@ -121,6 +149,16 @@ def guess_vpn_interface(index: Optional[int]) -> Optional[str]:
 
 
 def interface_counters(name: str) -> Optional[Tuple[int, int]]:
+    if sys.platform == "darwin":
+        rc, out, _ = run(["netstat", "-ibn", "-I", name], timeout=2)
+        for line in reversed(out.splitlines()):
+            parts = line.split()
+            if parts and parts[0] == name and len(parts) >= 10:
+                try:
+                    return int(parts[6]), int(parts[9])
+                except (ValueError, IndexError):
+                    pass
+        return None
     base = os.path.join(SYS_NET, name, "statistics")
     try:
         with open(base + "/rx_bytes") as f:
@@ -133,6 +171,9 @@ def interface_counters(name: str) -> Optional[Tuple[int, int]]:
 
 
 def interface_up(name: str) -> bool:
+    if sys.platform == "darwin":
+        rc, out, _ = run(["ifconfig", name], timeout=2)
+        return rc == 0 and "UP" in out.splitlines()[0] if out else False
     try:
         with open(os.path.join(SYS_NET, name, "operstate")) as f:
             return f.read().strip() in ("up", "unknown")
@@ -146,7 +187,10 @@ _PING_RE = re.compile(r"time[=<]([\d.]+) ?ms")
 def ping(host: str, timeout: int = 2) -> Optional[float]:
     if not shutil.which("ping"):
         return None
-    rc, out, _ = run(["ping", "-n", "-c", "1", "-W", str(timeout), host], timeout=timeout + 2)
+    args = (["ping", "-n", "-c", "1", "-W", str(timeout * 1000), host]
+            if sys.platform == "darwin" else
+            ["ping", "-n", "-c", "1", "-W", str(timeout), host])
+    rc, out, _ = run(args, timeout=timeout + 2)
     if rc != 0:
         return None
     m = _PING_RE.search(out)
@@ -154,6 +198,9 @@ def ping(host: str, timeout: int = 2) -> Optional[float]:
 
 
 def nameservers() -> List[str]:
+    if sys.platform == "darwin":
+        rc, out, _ = run(["scutil", "--dns"], timeout=3)
+        return list(dict.fromkeys(re.findall(r"nameserver\[\d+\]\s*:\s*(\S+)", out)))
     servers = []
     try:
         with open(kvc.RESOLV_CONF) as f:
@@ -174,6 +221,10 @@ def resolved_active() -> bool:
 
 
 def default_route_interfaces() -> List[str]:
+    if sys.platform == "darwin":
+        rc, out, _ = run(["route", "-n", "get", "default"], timeout=2)
+        m = re.search(r"interface:\s*(\S+)", out)
+        return [m.group(1)] if m else []
     rc, out, _ = run(["ip", "-o", "route", "show", "default"], timeout=2)
     names = []
     for line in out.splitlines():
@@ -211,6 +262,8 @@ def tcp_latency(host: str, port: int, timeout: float = 3.0) -> Optional[float]:
 
 
 def tun_available() -> bool:
+    if sys.platform == "darwin":
+        return daemon_installed()
     return os.path.exists("/dev/net/tun")
 
 
@@ -218,6 +271,13 @@ def check_environment() -> Dict[str, Tuple[bool, str]]:
     """Return {check: (ok, detail)} for the System page."""
     ver = daemon_version()
     st = service_state()
+    if sys.platform == "darwin":
+        return {
+            "daemon": (daemon_installed(), ver or kvc.DAEMON),
+            "service": (st.loaded, kvc.INIT_SCRIPT),
+            "vpn-interface": (bool(guess_vpn_interface(None)), "kvnet/utun"),
+            "logs": (os.access(kvc.DEBUG_LOG, os.R_OK), kvc.DEBUG_LOG),
+        }
     checks = {
         "daemon": (daemon_installed(), ver or kvc.DAEMON),
         "service": (st.loaded, kvc.SERVICE if has_systemd() else kvc.INIT_SCRIPT),
