@@ -12,6 +12,7 @@ private enum KerioPaths {
     static let profiles = support.appendingPathComponent("profiles.json")
     static let isolatedHome = support.appendingPathComponent("KerioHome")
     static let isolatedConfig = isolatedHome.appendingPathComponent(".kerio/vpnclient/user.cfg")
+    static let isolatedPID = support.appendingPathComponent("isolated-client.pid")
 }
 
 struct VPNProfile: Identifiable, Codable, Equatable {
@@ -32,6 +33,7 @@ final class KerioModel: ObservableObject {
     @Published var selectedID: UUID?
     @Published var recentLog = ""
     @Published var errorMessage: String?
+    @Published var isolatedClientRunning = false
     private var isolatedClient: Process?
 
     init() { loadProfiles() }
@@ -49,6 +51,7 @@ final class KerioModel: ObservableObject {
         let statuses = recentLog.split(separator: "\n").filter { $0.contains("received status packet") }
         connected = statuses.last?.contains("status packet (connected,") == true
         status = connected ? "Connected" : (serviceRunning ? "Ready" : "Service stopped")
+        isolatedClientRunning = isolatedRunningApplication() != nil
     }
 
     func add(_ profile: VPNProfile) {
@@ -81,6 +84,12 @@ final class KerioModel: ObservableObject {
             return
         }
         do {
+            if let running = isolatedRunningApplication() {
+                running.activate(options: [])
+                isolatedClientRunning = true
+                status = "Isolated Kerio client is already open"
+                return
+            }
             try writeIsolatedConfiguration()
             let process = Process()
             process.executableURL = URL(fileURLWithPath: KerioPaths.statusExecutable)
@@ -90,8 +99,28 @@ final class KerioModel: ObservableObject {
             process.environment = environment
             try process.run()
             isolatedClient = process
+            try String(process.processIdentifier).write(to: KerioPaths.isolatedPID,
+                                                        atomically: true, encoding: .utf8)
+            isolatedClientRunning = true
             status = "Isolated Kerio client opened"
         } catch { errorMessage = error.localizedDescription }
+    }
+
+    func stopIsolatedClient() {
+        guard let running = isolatedRunningApplication() else {
+            try? FileManager.default.removeItem(at: KerioPaths.isolatedPID)
+            isolatedClientRunning = false
+            status = "Kerio helper is already hidden"
+            return
+        }
+        if running.terminate() {
+            try? FileManager.default.removeItem(at: KerioPaths.isolatedPID)
+            isolatedClient = nil
+            isolatedClientRunning = false
+            status = connected ? "Connected" : "Kerio helper hidden"
+        } else {
+            errorMessage = "Could not close the isolated Kerio helper."
+        }
     }
 
     func openLogs() {
@@ -139,6 +168,15 @@ final class KerioModel: ObservableObject {
         </config>
         """
         try xml.data(using: .utf8)!.write(to: KerioPaths.isolatedConfig, options: [.atomic])
+    }
+
+    private func isolatedRunningApplication() -> NSRunningApplication? {
+        guard let raw = try? String(contentsOf: KerioPaths.isolatedPID, encoding: .utf8),
+              let pid = pid_t(raw.trimmingCharacters(in: .whitespacesAndNewlines)),
+              let app = NSRunningApplication(processIdentifier: pid), !app.isTerminated else {
+            return nil
+        }
+        return app
     }
 
     private func readLog() {
@@ -279,8 +317,12 @@ struct ContentView: View {
                         }
                     }
                     HStack {
-                        Button("Open isolated Kerio client") { model.launchIsolatedClient() }.buttonStyle(.borderedProminent)
-                            .disabled(!model.installed || model.profiles.isEmpty)
+                        Button(model.isolatedClientRunning ? "Show Kerio helper" : "Open isolated Kerio client") {
+                            model.launchIsolatedClient()
+                        }.buttonStyle(.borderedProminent).disabled(!model.installed || model.profiles.isEmpty)
+                        if model.isolatedClientRunning {
+                            Button("Hide Kerio helper") { model.stopIsolatedClient() }
+                        }
                         Button("Add connection") { showingAdd = true }
                         Button("Import existing") { model.importExisting() }
                         Button("Logs") { model.openLogs() }.disabled(!model.installed)

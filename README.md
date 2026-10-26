@@ -100,6 +100,8 @@ macOS features:
 - Isolated Kerio runtime under `Application Support/KerioVPNMac/KerioHome`
 - Live daemon status and recent activity log
 - No changes to the user's original Kerio profiles
+- Single-instance Kerio helper management, preventing duplicate menu-bar icons
+- **Hide Kerio helper** closes the isolated menu-bar item without stopping the VPN daemon
 
 Requirements: macOS 13 or newer and the official Kerio Control VPN Client. Build the app with:
 
